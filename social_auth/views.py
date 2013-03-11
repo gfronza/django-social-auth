@@ -17,6 +17,7 @@ from django.db import IntegrityError
 from social_auth.utils import sanitize_redirect, setting, \
                               backend_setting, clean_partial_pipeline
 from social_auth.decorators import dsa_view, disconnect_view
+from social_auth.exceptions import AuthCanceled
 
 
 DEFAULT_REDIRECT = setting('SOCIAL_AUTH_LOGIN_REDIRECT_URL',
@@ -111,6 +112,9 @@ def complete_process(request, backend, *args, **kwargs):
         user = auth_complete(request, backend, *args, **kwargs)
     except IntegrityError:
         url = setting('SIGNUP_ERROR_URL', setting('LOGIN_ERROR_URL'))
+        return HttpResponseRedirect(url)
+    except AuthCanceled:
+        url = setting('SIGNUP_AUTH_CANCELED_URL', setting('LOGIN_ERROR_URL'))
         return HttpResponseRedirect(url)
 
     if isinstance(user, HttpResponse):
